@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=300, initial-scale=1.0">
+    <title>Should I import or should I roll?</title>
+    <style>
+        #title {
+            font-size: 20px;
+        }
+        #controls {
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+        }
+        .control {
+            display: flex;
+        }
+        .control span {
+            width: 120px;
+        }
+        .control input {
+            width: 120px;
+        }
+        #results {
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+        }
+        .result {
+            display: flex;
+        }
+        .result span:first-child {
+            width: 120px;
+        }
+    </style>
+    <script type="module">
+        const { instance } = await WebAssembly.instantiateStreaming(fetch("import_or_roll.wasm"), { Math });
+
+        const {count_roll, count_import} = instance.exports; 
+
+        const button_run = document.getElementById('button-run');
+        const button_reset = document.getElementById('button-reset');
+        const results_section = document.getElementById('results');
+        const max_number_input = document.getElementById('max-number');
+        const threshold_input = document.getElementById('threshold');
+        const result_javascript_span = document.getElementById('result-javascript');
+        const result_wasm_import_span = document.getElementById('result-wasm-import');
+        const result_wasm_roll_span = document.getElementById('result-wasm-roll');
+
+        function count_numbers(n, t) {
+            let count = 0;
+            for (let x = 0; x < n; x += 1) {
+                if (Math.sin(x) < t) {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        function resetValues() {
+            max_number_input.value = 10_000_000;
+            threshold_input.value = 0.223;
+        }
+
+        function timeIt() {
+            const N = parseFloat(max_number_input.value);
+            const T = parseFloat(threshold_input.value);
+            result_javascript_span.textContent = '';
+            result_wasm_import_span.textContent = '';
+            result_wasm_roll_span.textContent = '';
+
+            setTimeout(() => {
+                const startTime = Date.now();
+                const value = count_numbers(N, T);
+                const elapsed = Date.now() - startTime;
+                result_javascript_span.textContent = `Count ${value} in ${elapsed/1000} seconds`;
+            }, 0);
+
+            setTimeout(() => {
+                const startTime = Date.now();
+                const value = count_roll(N, T);
+                const elapsed = Date.now() - startTime;
+                result_wasm_roll_span.textContent = `Count ${value} in ${elapsed/1000} seconds`;
+            }, 0);
+
+            setTimeout(() => {
+                const startTime = Date.now();
+                const value = count_import(N, T);
+                const elapsed = Date.now() - startTime;
+                result_wasm_import_span.textContent = `Count ${value} in ${elapsed/1000} seconds`;
+            }, 0);
+        }
+
+        resetValues();
+        timeIt();
+
+        button_run.addEventListener('click', timeIt);
+        button_reset.addEventListener('click', resetValues);
+
+
+
+    </script>
+</head>
+<div id="title">Testing trigonometric functions in wasm</div>
+<div id="controls">
+    <div class="control"><span>Max number:</span><input id="max-number" type="number" value="10000000"/></div>
+    <div class="control"><span>Threshold:</span><input id="threshold" type="number" value="0.223"/></div>
+</div>
+<div id="buttons">
+    <button id="button-reset">Reset values</button>
+    <button id="button-run">Run tests</button>
+</div>
+<div id="results">
+    <div class="result"><span>Javascript:</span><span id="result-javascript"></span></div>
+    <div class="result"><span>Wasm import:</span><span id="result-wasm-import"></span></div>
+    <div class="result"><span>Wasm roll:</span><span id="result-wasm-roll"></span></div>
+</div>
+<div>See <a href="">this</a> for an explanation</div>
+</html>

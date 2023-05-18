@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=300, initial-scale=1.0">
+    <title>Testing WebAssembly</title>
+    <script>
+        WebAssembly.instantiateStreaming(fetch("import.wasm"), { Math }).then((obj) => {
+            console.time('compute');
+            console.log(obj.instance.exports.count_numbers(100_000_000, 0.223));
+            console.timeEnd('compute');
+        });
+    </script>
+</head>
+</html>
